@@ -1,0 +1,17 @@
+{
+  "remaining_pages": 300,
+  "sessions": [
+    {
+      "pages": 30,
+      "minutes": 45,
+      "retention": 0.9
+    },
+    {
+      "pages": 40,
+      "minutes": 60,
+      "retention": 0.8
+    }
+  ],
+  "break_factor": 0.9,
+  "planned_session_minutes": 30
+}
