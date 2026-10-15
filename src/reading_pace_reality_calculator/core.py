@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 PROJECT = "reading-pace-reality-calculator"
@@ -14,18 +14,28 @@ def _require(data: dict[str, Any], key: str) -> Any:
     return value
 
 
-def _reading_pace(data: dict[str, Any]) -> dict[str, Any]:
-    remaining = Decimal(str(_require(data, "remaining_pages")))
+def number(value: Any, name: str, *, positive: bool = False) -> Decimal:
+    try:
+        result = Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        raise ValueError(f"{name} must be a finite number") from None
+    if not result.is_finite() or result < 0 or (positive and result == 0):
+        raise ValueError(f"{name} must be finite and {'positive' if positive else 'non-negative'}")
+    return result
+
+
+def _reading_pace(data: dict[str, Any], *, include_exact: bool = False) -> dict[str, Any]:
+    remaining = number(_require(data, "remaining_pages"), "remaining_pages")
     sessions = _require(data, "sessions")
+    if not isinstance(sessions, list) or any(not isinstance(s, dict) for s in sessions):
+        raise ValueError("sessions must be a non-empty list of objects")
     rates: list[Decimal] = []
     retention: list[Decimal] = []
     for session in sessions:
-        minutes = Decimal(str(session.get("minutes", 0)))
-        pages = Decimal(str(session.get("pages", 0)))
-        if minutes <= 0 or pages < 0:
-            raise ValueError("session minutes must be positive and pages non-negative")
+        minutes = number(session.get("minutes", 0), "session minutes", positive=True)
+        pages = number(session.get("pages", 0), "session pages")
         rates.append(pages / minutes * 60)
-        retention.append(Decimal(str(session.get("retention", 1))))
+        retention.append(number(session.get("retention", 1), "retention"))
     sorted_rates = sorted(rates)
     middle = len(sorted_rates) // 2
     median_rate = (
@@ -34,14 +44,17 @@ def _reading_pace(data: dict[str, Any]) -> dict[str, Any]:
         else (sorted_rates[middle - 1] + sorted_rates[middle]) / Decimal(2)
     )
     retention_factor = sum(retention, Decimal(0)) / Decimal(len(retention))
-    break_factor = Decimal(str(data.get("break_factor", 1)))
+    break_factor = number(data.get("break_factor", 1), "break_factor", positive=True)
     effective = median_rate * retention_factor * break_factor
     if effective <= 0:
         raise ValueError("effective reading pace must be positive")
     hours = remaining / effective
-    session_minutes = Decimal(str(data.get("planned_session_minutes", 30)))
+    session_minutes = number(
+        data.get("planned_session_minutes", 30), "planned_session_minutes", positive=True
+    )
     sessions_needed = (hours * 60 / session_minutes).to_integral_value(rounding="ROUND_CEILING")
     return {
+        **({"exact_hours": hours} if include_exact else {}),
         "median_pages_per_hour": round(median_rate, 2),
         "effective_pages_per_hour": round(effective, 2),
         "hours_remaining": round(hours, 2),
@@ -50,7 +63,41 @@ def _reading_pace(data: dict[str, Any]) -> dict[str, Any]:
 
 
 def analyze(data: dict[str, Any]) -> dict[str, Any]:
-    return {"version": 1, "project": PROJECT, **_reading_pace(data)}
+    if not isinstance(data, dict):
+        raise TypeError("input must be an object")
+    report = {"version": 1, "project": PROJECT, **_reading_pace(data)}
+    if "scenarios" in data:
+        scenarios = data["scenarios"]
+        if not isinstance(scenarios, list):
+            raise ValueError("scenarios must be a list")
+        names: set[str] = set()
+        results = []
+        for scenario in scenarios:
+            if not isinstance(scenario, dict):
+                raise TypeError("scenario must be an object")
+            name = scenario.get("name")
+            if not isinstance(name, str) or not name.strip() or name in names:
+                raise ValueError("scenario names must be non-empty and unique")
+            names.add(name)
+            length = number(scenario.get("session_minutes", 30), "session_minutes", positive=True)
+            pause = number(scenario.get("break_minutes", 0), "break_minutes")
+            estimate = _reading_pace(
+                {**data, "planned_session_minutes": length}, include_exact=True
+            )
+            reading_hours = estimate.pop("exact_hours")
+            results.append(
+                {
+                    "name": name,
+                    "session_minutes": length,
+                    "break_minutes": pause,
+                    **estimate,
+                    "elapsed_hours": round(
+                        reading_hours + max(estimate["sessions_remaining"] - 1, 0) * pause / 60, 2
+                    ),
+                }
+            )
+        report["scenarios"] = results
+    return report
 
 
 def render_json(report: dict[str, Any]) -> str:
