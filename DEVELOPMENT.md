@@ -4,7 +4,7 @@ Estimate completion time from real sessions, retention, breaks, and reading cond
 
 Preserve deterministic, source-safe behavior and the interpretation boundary documented in the README. Every feature release must update tests, version metadata, changelog, README claims, repository metadata, release assets, and the Forge catalog together.
 
-## 1.1.0 candidate
+## 1.1.0 - 2026-10-15
 
 Add an optional `scenarios` list to compare session length and time between sessions:
 
@@ -16,4 +16,4 @@ Each scenario uses the same observed median pace and existing retention/break-fa
 
 Without scenarios, the report retains its existing fields and defaults. These are arithmetic planning estimates from user-supplied observations and assumptions, **not predictions of comprehension, retention, or reading ability**. Nothing is collected or uploaded.
 
-Stop at independent PR review before merge or release.
+Changes require independent review before merge or release.
