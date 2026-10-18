@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.3 - 2026-10-18
+
+- Calculate session ceilings from exact finite ratios so a completed session boundary does not add an extra session or break.
+- Round scenario elapsed time from the exact reading time and intervening breaks.
+- Return exit status 2 for failed stdout writes, including a closed pipe.
+
 ## 1.1.2 - 2026-10-18
 
 - Create report files exclusively so a destination arriving during export is preserved.

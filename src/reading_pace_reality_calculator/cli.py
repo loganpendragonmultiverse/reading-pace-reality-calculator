@@ -1,11 +1,29 @@
 from __future__ import annotations
 
 import argparse
+import io
 import json
+import os
 import sys
 from pathlib import Path
 
 from .core import analyze, render_json, render_markdown
+
+
+def _write_stdout(rendered: str) -> None:
+    # Write real descriptors directly: buffered failures otherwise escape at shutdown.
+    try:
+        descriptor = sys.stdout.fileno()
+    except (AttributeError, io.UnsupportedOperation):
+        sys.stdout.write(rendered)
+        sys.stdout.flush()
+        return
+    pending = rendered.encode(sys.stdout.encoding or "utf-8", sys.stdout.errors or "strict")
+    while pending:
+        written = os.write(descriptor, pending)
+        if written <= 0:
+            raise OSError("stdout accepted no report bytes")
+        pending = pending[written:]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -24,7 +42,7 @@ def main(argv: list[str] | None = None) -> int:
             with args.output.open("x", encoding="utf-8") as stream:
                 stream.write(rendered)
         else:
-            sys.stdout.write(rendered)
+            _write_stdout(rendered)
     except (OSError, UnicodeError, TypeError, ValueError, json.JSONDecodeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
