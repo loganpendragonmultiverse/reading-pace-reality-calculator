@@ -1,5 +1,9 @@
 # Reading Pace Reality Calculator
 
+## Gold Star project
+
+Reviewed for v1.1.3 on October 18, 2026. Local reading-time estimates from supplied sessions, named session and break scenarios, and JSON or Markdown reports.
+
 [![CI](https://github.com/loganpendragonmultiverse/reading-pace-reality-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/loganpendragonmultiverse/reading-pace-reality-calculator/actions/workflows/ci.yml)
 
 Estimate completion time from real sessions, retention, breaks, and reading conditions. The command uses explicit UTF-8 JSON input and produces reviewable JSON or Markdown output.
@@ -55,6 +59,6 @@ Each scenario uses the same observed median pace and existing retention/break-fa
 
 Without scenarios, the report retains its existing fields and defaults. These are arithmetic planning estimates from user-supplied observations and assumptions, **not predictions of comprehension, retention, or reading ability**. Nothing is collected or uploaded.
 
-### Changes prepared for 1.1.3 — 2026-10-18
+### Release 1.1.3 — 2026-10-18
 
 Session counts use exact finite ratios before rounding up. For example, three pages at one page per 13 minutes require three 13-minute sessions; with ten-minute breaks between sessions, elapsed time is 0.98 hours. A value just above three pages still requires a fourth session. Reading hours and scenario elapsed hours use the same exact half-even rounding to two decimal places. Scenario elapsed hours include no trailing break. Unsupported decimal ranges remain input errors. Failed stdout writes return exit status 2.
