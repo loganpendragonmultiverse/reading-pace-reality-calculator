@@ -1,9 +1,5 @@
 # Reading Pace Reality Calculator
 
-> ⭐ **Gold Star Project**
-> I consider this project complete. Fixes, maintenance and good new ideas are still welcome.
-> [About Gold Stars](https://www.loganpendragonforge.com/open-source/?gold=1)
-
 [![CI](https://github.com/loganpendragonmultiverse/reading-pace-reality-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/loganpendragonmultiverse/reading-pace-reality-calculator/actions/workflows/ci.yml)
 
 Estimate completion time from real sessions, retention, breaks, and reading conditions. The command uses explicit UTF-8 JSON input and produces reviewable JSON or Markdown output.
