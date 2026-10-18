@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2 - 2026-10-18
+
+- Create report files exclusively so a destination arriving during export is preserved.
+- Return an actionable input error when finite values exceed the decimal calculation range, before creating a report.
+
 ## 1.1.1 - 2026-10-16
 
 - Correct the completed 1.1.0 release wording and dates; feature behavior is unchanged.

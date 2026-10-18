@@ -4,6 +4,12 @@
 
 Estimate completion time from real sessions, retention, breaks, and reading conditions. The command uses explicit UTF-8 JSON input and produces reviewable JSON or Markdown output.
 
+## Current release 1.1.2
+
+Reports use exclusive file creation. If another process creates the destination during export, the command returns an error and preserves that file and the source input.
+
+Finite numeric inputs must also fit the decimal calculation range. Values that overflow arithmetic or cannot be rounded to the report precision return an actionable error before any output file is created. These limits do not change ordinary reading estimates.
+
 ## Three-minute start
 
 ```bash
