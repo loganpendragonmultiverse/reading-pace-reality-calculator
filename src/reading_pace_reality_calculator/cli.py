@@ -21,9 +21,8 @@ def main(argv: list[str] | None = None) -> int:
         report = analyze(data)
         rendered = render_json(report) if args.format == "json" else render_markdown(report)
         if args.output:
-            if args.output.exists():
-                raise ValueError(f"output already exists: {args.output}")
-            args.output.write_text(rendered, encoding="utf-8")
+            with args.output.open("x", encoding="utf-8") as stream:
+                stream.write(rendered)
         else:
             sys.stdout.write(rendered)
     except (OSError, UnicodeError, TypeError, ValueError, json.JSONDecodeError) as exc:

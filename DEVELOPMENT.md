@@ -17,3 +17,7 @@ Each scenario uses the same observed median pace and existing retention/break-fa
 Without scenarios, the report retains its existing fields and defaults. These are arithmetic planning estimates from user-supplied observations and assumptions, **not predictions of comprehension, retention, or reading ability**. Nothing is collected or uploaded.
 
 Changes require independent review before merge or release.
+
+## 1.1.2 output and arithmetic failure handling
+
+Create JSON and Markdown reports exclusively; reproduce a destination appearing immediately before open and verify it survives unchanged. Preserve source bytes and retry successfully at a new path. Finite numeric inputs can still exceed Decimal arithmetic or rounding limits; both the public analysis function and CLI must reject those inputs actionably before creating output. Cover rate, remaining-time, rounding and scenario-break failures while retaining the existing estimate semantics. Run formatting, lint, typing, full coverage tests, builds and installed-artifact end-to-end checks before independent review.

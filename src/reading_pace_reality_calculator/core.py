@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, DecimalException, InvalidOperation
 from typing import Any
 
 PROJECT = "reading-pace-reality-calculator"
@@ -63,6 +63,14 @@ def _reading_pace(data: dict[str, Any], *, include_exact: bool = False) -> dict[
 
 
 def analyze(data: dict[str, Any]) -> dict[str, Any]:
+    """Reject arithmetic outside Decimal's range with an actionable input error."""
+    try:
+        return _analyze(data)
+    except DecimalException as exc:
+        raise ValueError("numeric values exceed the supported decimal calculation range") from exc
+
+
+def _analyze(data: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise TypeError("input must be an object")
     report = {"version": 1, "project": PROJECT, **_reading_pace(data)}
