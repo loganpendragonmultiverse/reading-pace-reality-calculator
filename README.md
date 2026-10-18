@@ -57,4 +57,4 @@ Without scenarios, the report retains its existing fields and defaults. These ar
 
 ### Changes prepared for 1.1.3 — 2026-10-18
 
-Session counts use exact finite ratios before rounding up. For example, three pages at one page per 13 minutes require three 13-minute sessions; with ten-minute breaks between sessions, elapsed time is 0.98 hours. A value just above three pages still requires a fourth session. Scenario elapsed hours include no trailing break and round to two decimal places. Unsupported decimal ranges remain input errors. Failed stdout writes return exit status 2.
+Session counts use exact finite ratios before rounding up. For example, three pages at one page per 13 minutes require three 13-minute sessions; with ten-minute breaks between sessions, elapsed time is 0.98 hours. A value just above three pages still requires a fourth session. Reading hours and scenario elapsed hours use the same exact half-even rounding to two decimal places. Scenario elapsed hours include no trailing break. Unsupported decimal ranges remain input errors. Failed stdout writes return exit status 2.

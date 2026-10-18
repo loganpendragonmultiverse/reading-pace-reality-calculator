@@ -131,3 +131,18 @@ def test_even_median_with_different_rates_keeps_exact_ceiling():
         }
     )
     assert report["sessions_remaining"] == 3
+
+
+@pytest.mark.parametrize("minutes, expected", [(7, "0.04"), (13, "0.06"), (45, "0.22")])
+def test_exact_half_cent_hours_match_zero_break_elapsed_hours(minutes, expected):
+    report = analyze(
+        {
+            "remaining_pages": 3,
+            "sessions": [{"pages": 10, "minutes": minutes}],
+            "scenarios": [{"name": "No breaks", "session_minutes": 30, "break_minutes": 0}],
+        }
+    )
+    scenario = report["scenarios"][0]
+    assert report["hours_remaining"] == Decimal(expected)
+    assert scenario["hours_remaining"] == Decimal(expected)
+    assert scenario["elapsed_hours"] == Decimal(expected)

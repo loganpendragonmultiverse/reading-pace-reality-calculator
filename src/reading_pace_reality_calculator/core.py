@@ -73,6 +73,7 @@ def _reading_pace(data: dict[str, Any], *, include_exact: bool = False) -> dict[
     )
     exact_retention = sum(map(Fraction, retention), Fraction(0)) / len(retention)
     exact_hours = Fraction(remaining) / (exact_median * exact_retention * Fraction(break_factor))
+    displayed["hours_remaining"] = Decimal(round(exact_hours * 100)).scaleb(-2)
     session_ratio = exact_hours * 60 / Fraction(session_minutes)
     sessions_needed = -(-session_ratio.numerator // session_ratio.denominator)
     return {
