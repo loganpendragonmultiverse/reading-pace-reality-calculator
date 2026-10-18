@@ -4,7 +4,7 @@
 
 Estimate completion time from real sessions, retention, breaks, and reading conditions. The command uses explicit UTF-8 JSON input and produces reviewable JSON or Markdown output.
 
-## Changes prepared for 1.1.2
+## Release 1.1.2 — 2026-10-18
 
 Reports use exclusive file creation. If another process creates the destination during export, the command returns an error and preserves that file and the source input.
 
