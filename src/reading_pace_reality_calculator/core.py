@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import json
-from decimal import Decimal, DecimalException, InvalidOperation
+from decimal import Decimal, DecimalException, InvalidOperation, getcontext
+from fractions import Fraction
 from typing import Any
 
 PROJECT = "reading-pace-reality-calculator"
@@ -21,6 +22,8 @@ def number(value: Any, name: str, *, positive: bool = False) -> Decimal:
         raise ValueError(f"{name} must be a finite number") from None
     if not result.is_finite() or result < 0 or (positive and result == 0):
         raise ValueError(f"{name} must be finite and {'positive' if positive else 'non-negative'}")
+    if result and not getcontext().Etiny() <= result.adjusted() <= getcontext().Emax:
+        raise InvalidOperation("numeric exponent exceeds the decimal calculation range")
     return result
 
 
@@ -31,10 +34,12 @@ def _reading_pace(data: dict[str, Any], *, include_exact: bool = False) -> dict[
         raise ValueError("sessions must be a non-empty list of objects")
     rates: list[Decimal] = []
     retention: list[Decimal] = []
+    observations: list[tuple[Decimal, Decimal]] = []
     for session in sessions:
         minutes = number(session.get("minutes", 0), "session minutes", positive=True)
         pages = number(session.get("pages", 0), "session pages")
         rates.append(pages / minutes * 60)
+        observations.append((pages, minutes))
         retention.append(number(session.get("retention", 1), "retention"))
     sorted_rates = sorted(rates)
     middle = len(sorted_rates) // 2
@@ -52,12 +57,28 @@ def _reading_pace(data: dict[str, Any], *, include_exact: bool = False) -> dict[
     session_minutes = number(
         data.get("planned_session_minutes", 30), "planned_session_minutes", positive=True
     )
-    sessions_needed = (hours * 60 / session_minutes).to_integral_value(rounding="ROUND_CEILING")
-    return {
-        **({"exact_hours": hours} if include_exact else {}),
+    # Keep Decimal display/range checks before exact finite-ratio conversion.
+    displayed = {
         "median_pages_per_hour": round(median_rate, 2),
         "effective_pages_per_hour": round(effective, 2),
         "hours_remaining": round(hours, 2),
+    }
+    exact_rates = sorted(
+        Fraction(pages) / Fraction(minutes) * 60 for pages, minutes in observations
+    )
+    exact_median = (
+        exact_rates[middle]
+        if len(exact_rates) % 2
+        else (exact_rates[middle - 1] + exact_rates[middle]) / 2
+    )
+    exact_retention = sum(map(Fraction, retention), Fraction(0)) / len(retention)
+    exact_hours = Fraction(remaining) / (exact_median * exact_retention * Fraction(break_factor))
+    displayed["hours_remaining"] = Decimal(round(exact_hours * 100)).scaleb(-2)
+    session_ratio = exact_hours * 60 / Fraction(session_minutes)
+    sessions_needed = -(-session_ratio.numerator // session_ratio.denominator)
+    return {
+        **({"exact_hours": exact_hours} if include_exact else {}),
+        **displayed,
         "sessions_remaining": int(sessions_needed),
     }
 
@@ -93,15 +114,21 @@ def _analyze(data: dict[str, Any]) -> dict[str, Any]:
                 {**data, "planned_session_minutes": length}, include_exact=True
             )
             reading_hours = estimate.pop("exact_hours")
+            breaks = max(estimate["sessions_remaining"] - 1, 0)
+            # Preserve Decimal range refusal before converting/rounding exact elapsed time.
+            round(
+                Decimal(reading_hours.numerator) / Decimal(reading_hours.denominator)
+                + breaks * pause / 60,
+                2,
+            )
+            elapsed = reading_hours + breaks * Fraction(pause) / 60
             results.append(
                 {
                     "name": name,
                     "session_minutes": length,
                     "break_minutes": pause,
                     **estimate,
-                    "elapsed_hours": round(
-                        reading_hours + max(estimate["sessions_remaining"] - 1, 0) * pause / 60, 2
-                    ),
+                    "elapsed_hours": Decimal(round(elapsed * 100)).scaleb(-2),
                 }
             )
         report["scenarios"] = results
